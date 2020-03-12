@@ -1,1 +1,5 @@
 data/*
+word2vec/*
+code/__pycache__/*
+*.DS_Store
+checkpoints/*
