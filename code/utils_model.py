@@ -1,19 +1,28 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+from tensorflow.python.util import deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
 import numpy as np
 import tensorflow.keras
 import tensorflow.keras.layers as layers
 from tensorflow.python.keras.layers.core import Dense, Activation, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import regularizers
+from tensorflow.keras import optimizers
 from random import shuffle
+
+def append_zeros(x, l=2):
+	x = str(x)
+	while len(x) < l:
+		x = '0' + x
+	return x 
 
 #getting the x and y inputs in numpy array form from the text file
 def get_x_y(train_txt, num_classes, word2vec_len, input_size, word2vec):
 
 	#read in lines
 	train_lines = open(train_txt, 'r').readlines()
-	shuffle(train_lines)
+	# shuffle(train_lines)
 	num_lines = len(train_lines)
 
 	#initialize x and y matrix
@@ -49,12 +58,22 @@ def get_x_y(train_txt, num_classes, word2vec_len, input_size, word2vec):
 def build_cnn(sentence_length, word2vec_len, num_classes):
 	model = None
 	model = Sequential()
-	model.add(layers.Conv1D(128, 5, activation='relu', input_shape=(sentence_length, word2vec_len), kernel_regularizer=regularizers.l2(0.001), bias_regularizer=regularizers.l2(0.001)))
+	model.add(layers.Conv1D(128, 5, activation='relu', input_shape=(sentence_length, word2vec_len),
+							kernel_regularizer=regularizers.l2(0.001), 
+							bias_regularizer=regularizers.l2(0.001)))
 	model.add(layers.GlobalMaxPooling1D())
 	model.add(Dense(20, activation='relu'))
 	model.add(Dense(num_classes, kernel_initializer='normal', activation='softmax'))
-	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+	optimizer = optimizers.Adam(learning_rate=0.0001)
+	model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 	return model
+
+###################################################
+###################################################
+############# training and evaluation #############
+###################################################
+###################################################
 
 def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, word2vec_len=300, input_size=50):
 
@@ -66,14 +85,14 @@ def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, 
 	training_history = []
 	max_val_acc = 0.0
 
-	for epoch in range(10):
+	for epoch in range(100):
 
 		d = model.fit(	train_x, 
 						train_y,
 						epochs=1,
 						validation_data=(test_x, test_y),
-						batch_size=256,
-						shuffle=True,
+						batch_size=1024,
+						shuffle=False,
 						verbose=0
 						)
 
@@ -81,8 +100,17 @@ def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, 
 		val_loss, val_acc = d.history["val_loss"][0], d.history["val_accuracy"][0]
 		if val_acc > max_val_acc:
 			max_val_acc = val_acc
-			model_output_path = checkpoints_folder.joinpath(str(f"cnn_e{epoch}_vacc{val_acc:.4f}_tacc{train_acc:.4f}.pt"))
-			print(model_output_path)
+			model_output_path = checkpoints_folder.joinpath(str(f"cnn_e{append_zeros(epoch)}_tacc{train_acc:.4f}_vacc{val_acc:.4f}.pt"))
 			model.save(str(model_output_path))
+			print(f"epoch {append_zeros(epoch)}, train_loss {train_loss:.4f}, val_loss {val_loss:.4f}, train_acc {train_acc:.4f}, val_acc {val_acc:.4f}")
 
 		training_history.append((train_acc, val_acc))
+
+def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_file, word2vec_len=300, input_size=50):
+
+	model = build_cnn(input_size, word2vec_len, num_classes)
+
+	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
+	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+
+	# model.load(checkpoint_file)

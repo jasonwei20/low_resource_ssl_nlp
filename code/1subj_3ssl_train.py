@@ -9,7 +9,8 @@ word2vec_pickle = f"word2vec/{dataset_name}_w2v.pkl"
 word2vec = load_pickle(word2vec_pickle)
 
 num_positions = 2
-num_permutations = 2
+num_permutations = 4
+print(f"num_positions={num_positions}, num_permutations={num_permutations}")
 train_path = ssl_folder.joinpath(f"{num_positions}positions_{num_permutations}permutations_train.txt")
 test_path = ssl_folder.joinpath(f"{num_positions}positions_{num_permutations}permutations_test.txt")
 checkpoints_folder = Path("checkpoints").joinpath(dataset_name).joinpath(f"{num_positions}positions_{num_permutations}permutations")

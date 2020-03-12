@@ -1,10 +1,17 @@
-
-
+import random
+random.seed(42)
 
 def generate_permutations(num_positions, num_permutations):
 
-    if num_positions == 2 and num_permutations == 2:
-        return [[], [(3, 6), (6, 3)]]
+    if num_positions == 2:
+        if num_permutations == 2:
+            return [[], [(3, 6), (6, 3)]]
+        if num_permutations == 3:
+            return [[], [(3, 6), (6, 3)], [(3, 10), (10, 3)]]
+        if num_permutations == 4:
+            return [[], [(3, 6), (6, 3)], [(1, 7), (7, 1)], [(5, 10), (10, 5)]]
+        if num_permutations == 8:
+            return [[], [(3, 6), (6, 3)], [(3, 10), (10, 3)], [(1, 12), (12, 1)], [(1, 4), (1, 4)], [(13, 10), (10, 13)], [(2, 7), (7, 2)], [(4, 5), (5, 4)]]
     
     return None
 
@@ -23,10 +30,11 @@ def generate_swap_examples(token_list, num_positions, num_permutations):
             if source < len(new_token_list) and dest < len(token_list):
                 new_token_list[source] = token_list[dest]
                 hits += 1
-                x.append(new_token_list)
-                y.append(_class)
             else:
                 misses += 1
+                break
+        x.append(new_token_list)
+        y.append(_class)
     return x, y, hits, misses
 
 def output_swap_examples(input_txt_path, output_txt_path, num_positions, num_permutations):
@@ -45,3 +53,6 @@ def output_swap_examples(input_txt_path, output_txt_path, num_positions, num_per
         total_hits += hits; total_misses += misses
     
     print(f"{total_hits} hits and {total_misses} misses")
+
+if __name__ == "__main__":
+    random.seed()
