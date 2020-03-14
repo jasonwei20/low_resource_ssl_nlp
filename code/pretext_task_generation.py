@@ -1,23 +1,19 @@
 import random
 random.seed(42)
 
-def generate_permutations(num_positions, num_permutations):
+def retrieve_permutations(num_positions, num_permutations, max_len=15):
 
-    if num_positions == 2:
-        if num_permutations == 2:
-            return [[], [(3, 6), (6, 3)]]
-        if num_permutations == 3:
-            return [[], [(3, 6), (6, 3)], [(3, 10), (10, 3)]]
-        if num_permutations == 4:
-            return [[], [(3, 6), (6, 3)], [(1, 7), (7, 1)], [(5, 10), (10, 5)]]
-        if num_permutations == 8:
-            return [[], [(3, 6), (6, 3)], [(3, 10), (10, 3)], [(1, 12), (12, 1)], [(1, 4), (1, 4)], [(13, 10), (10, 13)], [(2, 7), (7, 2)], [(4, 5), (5, 4)]]
-    
-    return None
+    permutations_file = open(f"permutations/{num_positions}n_swap_tokens_{max_len}max_len.txt", 'r').readlines()
+    permutation_list = []
+    for line in permutations_file:
+        big_parts = line[:-1].split(';')
+        original_idxes = tuple([int(x) for x in big_parts[0].split(',')])
+        new_idxes = tuple([int(x) for x in big_parts[1].split(',')])
+        tuple_list = [original_idxes, new_idxes]
+        permutation_list.append(tuple_list)
+    return [()] + permutation_list[:num_permutations-1]
 
-def generate_swap_examples(token_list, num_positions, num_permutations):
-
-    permutations = generate_permutations(num_positions, num_permutations)
+def generate_swap_examples(token_list, permutations):
     
     x, y = [], []
 
@@ -39,6 +35,8 @@ def generate_swap_examples(token_list, num_positions, num_permutations):
 
 def output_swap_examples(input_txt_path, output_txt_path, num_positions, num_permutations):
 
+    permutations = retrieve_permutations(num_positions, num_permutations)
+
     lines = input_txt_path.open('r').readlines()
     output_writer = output_txt_path.open('w')
     
@@ -46,13 +44,10 @@ def output_swap_examples(input_txt_path, output_txt_path, num_positions, num_per
     for line in lines:
         data = line.replace("\n", "").split('\t')[1]
         token_list = [x for x in data.split(' ') if x != ""]
-        x_sentence, y_sentence, hits, misses = generate_swap_examples(token_list, num_positions, num_permutations)
+        x_sentence, y_sentence, hits, misses = generate_swap_examples(token_list, permutations)
         for x_sentence_i, y_sentence_i in zip(x_sentence, y_sentence):
             line = str(y_sentence_i) + '\t' + ' '.join(x_sentence_i) + '\n'
             output_writer.write(line)
         total_hits += hits; total_misses += misses
     
     print(f"{total_hits} hits and {total_misses} misses")
-
-if __name__ == "__main__":
-    random.seed()

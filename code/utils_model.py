@@ -86,7 +86,7 @@ def build_cnn(sentence_length, word2vec_len, num_classes):
 ###################################################
 ###################################################
 
-def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, word2vec_len=300, input_size=50):
+def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, word2vec_len=300, input_size=40):
 
 	model = build_cnn(input_size, word2vec_len, num_classes)
 
