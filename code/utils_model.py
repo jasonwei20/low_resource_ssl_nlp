@@ -3,19 +3,30 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 import numpy as np
+import random
+from sklearn.metrics import accuracy_score
+import statistics 
 import tensorflow.keras
 import tensorflow.keras.layers as layers
 from tensorflow.python.keras.layers.core import Dense, Activation, Dropout
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, Model, load_model
 from tensorflow.keras import regularizers
 from tensorflow.keras import optimizers
-from random import shuffle
+
+def most_common(lst):
+    return max(set(lst), key=lst.count)
 
 def append_zeros(x, l=2):
 	x = str(x)
 	while len(x) < l:
 		x = '0' + x
 	return x 
+
+def one_hot_numpy_to_list(one_hot_numpy):
+	l = []
+	for i in range(one_hot_numpy.shape[0]):
+		l.append(np.argmax(one_hot_numpy[i]))
+	return l
 
 #getting the x and y inputs in numpy array form from the text file
 def get_x_y(train_txt, num_classes, word2vec_len, input_size, word2vec):
@@ -106,11 +117,79 @@ def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, 
 
 		training_history.append((train_acc, val_acc))
 
-def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_file, word2vec_len=300, input_size=50):
+def get_training_subset(train_extracted_features, train_y, num_classes, k_per_class):
 
-	model = build_cnn(input_size, word2vec_len, num_classes)
+	class_to_extracted_feature_list = {i: [] for i in range(num_classes)}
+
+	#get extracted features by class
+	for i in range(train_extracted_features.shape[0]):
+		_class = np.argmax(train_y[i])
+		class_to_extracted_feature_list[_class].append(train_extracted_features[i])
+
+	#shuffle the order of extracted features
+	for extracted_feature_list in class_to_extracted_feature_list.values():
+		random.shuffle(extracted_feature_list)
+	class_to_extracted_feature_list = {_class: np.array(extracted_feature_list) for _class, extracted_feature_list in class_to_extracted_feature_list.items()}
+	
+	#get k extracted features per class
+	train_extracted_features_k = np.zeros((k_per_class*num_classes, class_to_extracted_feature_list[0].shape[1]))
+	train_y_k = []
+	for _class, extracted_feature_list in class_to_extracted_feature_list.items():
+		start_idx = _class * k_per_class
+		end_idx = start_idx + k_per_class
+		train_extracted_features_k[start_idx:end_idx, :] = extracted_feature_list[:k_per_class]
+		train_y_k += [_class for _ in range(k_per_class)]
+	train_y_k = np.array(train_y_k)
+
+	return train_extracted_features_k, train_y_k
+
+def get_predicted_label(train_extracted_features, train_y, test_extracted_feature_i, n_voters=10): #n means num_closest
+
+	tup_list = []
+	for j in range(train_extracted_features.shape[0]):
+		train_extracted_feature_j = train_extracted_features[j]
+		train_extracted_label_j = train_y[j]
+		dist = np.linalg.norm(train_extracted_feature_j - test_extracted_feature_i)
+		tup = (j, dist, train_extracted_label_j)
+		tup_list.append(tup)
+	
+	dist_sorted_tup_list = sorted(tup_list, key = lambda x: x[1])
+	votes = [tup[2] for tup in dist_sorted_tup_list][:n_voters]
+	majority_vote = most_common(votes)
+	return majority_vote
+
+def calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, num_trials=50):
+	train_extracted_features = feature_extractor.predict(train_x)
+	test_extracted_features = feature_extractor.predict(test_x)
+	test_y_list = one_hot_numpy_to_list(test_y)
+
+	acc_score_list = []
+	for _ in range(num_trials):
+		train_extracted_features_k, train_y_k = get_training_subset(train_extracted_features, train_y, num_classes, k_per_class)
+		test_y_predict = []
+		for i in range(test_extracted_features.shape[0]):
+			majority_vote = get_predicted_label(train_extracted_features_k, train_y_k, test_extracted_features[i])
+			test_y_predict.append(majority_vote)
+		acc = accuracy_score(test_y_list, test_y_predict)
+		acc_score_list.append(acc)
+	
+	acc = sum(acc_score_list) / len(acc_score_list)
+	std = statistics.stdev(acc_score_list)
+	output_line = f"{k_per_class},{acc:.4f},{std}"
+	print(output_line)
+
+def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_path, word2vec_len=300, input_size=50):
 
 	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
 	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+
+	model = build_cnn(input_size, word2vec_len, num_classes)
+	if checkpoint_path:
+		model = load_model(str(checkpoint_path))
+		print("loading model from", checkpoint_path)
+	feature_extractor = Model(inputs=model.input, outputs=model.get_layer(index=2).output)
+
+	for k_per_class in [10, 20, 50, 100]:
+		calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class)
 
 	# model.load(checkpoint_file)

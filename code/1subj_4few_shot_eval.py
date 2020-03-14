@@ -1,0 +1,27 @@
+from utils import *
+from utils_model import *
+import config as config
+
+dataset_name = "subj"
+data_folder = config.data_folders[dataset_name]
+num_classes = config.num_classes_dict[dataset_name]
+ssl_folder = data_folder.joinpath("ssl")
+word2vec_pickle = f"word2vec/{dataset_name}_w2v.pkl"
+word2vec = load_pickle(word2vec_pickle)
+
+train_txt_path = data_folder.joinpath("train.txt")
+test_txt_path = data_folder.joinpath("test.txt")
+
+# checkpoint_paths = [Path("checkpoints/subj/2positions_8permutations/cnn_e00_tacc0.1262_vacc0.1280.pt"),
+#                     Path("checkpoints/subj/2positions_8permutations/cnn_e06_tacc0.1781_vacc0.1685.pt/"),
+#                     Path("checkpoints/subj/2positions_8permutations/cnn_e13_tacc0.2516_vacc0.2095.pt/"),
+#                     Path("checkpoints/subj/2positions_8permutations/cnn_e65_tacc0.4709_vacc0.2397.pt/"),]
+
+
+checkpoint_paths = [Path("checkpoints/subj/2positions_4permutations/cnn_e00_tacc0.2496_vacc0.2595.pt"),
+                    Path("checkpoints/subj/2positions_4permutations/cnn_e11_tacc0.3957_vacc0.3268.pt"),
+                    Path("checkpoints/subj/2positions_4permutations/cnn_e18_tacc0.4797_vacc0.3783.pt"),
+                    Path("checkpoints/subj/2positions_4permutations/cnn_e76_tacc0.8619_vacc0.4067.pt"),]
+
+for checkpoint_path in checkpoint_paths:
+    evaluate_ssl_model(train_txt_path, test_txt_path, num_classes, word2vec, checkpoint_path)

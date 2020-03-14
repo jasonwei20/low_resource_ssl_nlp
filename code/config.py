@@ -5,4 +5,4 @@ word2vec_path = Path("/home/brenta/scratch/jason/data/word2vec/glove.42B.300d.tx
 
 data_folders = {"subj": Path("data/subj")}
 
-num_classes = {"subj": 2}
+num_classes_dict = {"subj": 2}
