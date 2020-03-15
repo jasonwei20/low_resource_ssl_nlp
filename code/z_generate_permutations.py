@@ -31,4 +31,6 @@ def generate_permutations(n_swap_tokens, max_len, max_permutations = 1024):
         output_writer.write(output_line+'\n')
 
 if __name__ == "__main__":
-    generate_permutations(n_swap_tokens=5, max_len=15)
+
+    for n_swap_tokens in [2, 3, 4, 5]:
+        generate_permutations(n_swap_tokens=n_swap_tokens, max_len=10)

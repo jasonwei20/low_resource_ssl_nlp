@@ -5,3 +5,5 @@ code/__pycache__/*
 checkpoints/*
 .vscode/*
 ._code*
+code/._preprocess_datasets
+*__pycache__*
