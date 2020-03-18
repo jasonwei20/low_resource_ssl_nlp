@@ -10,4 +10,5 @@ python 1subj_4few_shot_eval.py
 
 ## Datasets
 - [Subjectivity Dataset](http://www.cs.cornell.edu/people/pabo/movie-review-data/)
+- [Stanford Sentiment Treebank 2](https://nlp.stanford.edu/sentiment/)
 

@@ -51,13 +51,7 @@ def get_subfolder_paths(folder):
 #get all image paths
 def get_all_txt_paths(master_folder):
 
-    all_paths = []
-    subfolders = get_subfolder_paths(master_folder)
-    if len(subfolders) > 1:
-        for subfolder in subfolders:
-            all_paths += get_txt_paths(subfolder)
-    else:
-        all_paths = get_txt_paths(master_folder)
+    all_paths = get_txt_paths(master_folder)
     return all_paths
 
 ###################################################
@@ -71,8 +65,16 @@ def get_most_popular(word_to_count, n_most_popular):
 	most_popular_words = [x[0] for x in most_popular_word_tuples]
 	return most_popular_words
 
+def get_middle_popular(word_to_count, n_most_popular_to_exclude=1000, min_count=3):
+	tuples = word_to_count.items()
+	sorted_tuple_list = list(reversed(sorted(tuples, key=lambda x: x[1])))
+	sorted_tuple_list_min_count = [x for x in sorted_tuple_list if x[1] >= min_count]
+	middle_word_tuples = sorted_tuple_list_min_count[n_most_popular_to_exclude:]
+	middle_popular_words = [x[0] for x in middle_word_tuples]
+	return middle_popular_words
+
 #get the pickle file for the word2vec so you don't have to load the entire huge file each time
-def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, huge_word2vec):
+def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, middle_words_path, huge_word2vec):
 
 	word_to_count = {}
 	vocab = set()
@@ -104,13 +106,13 @@ def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, huge_word2
 	print(len(vocab), "unique words found")
 
 	# load the word embeddings, and only add the word to the dictionary if we need it
-	for line in text_embeddings:
-		items = line.split(' ')
-		word = items[0]
-		if word in vocab:
-			vec = items[1:]
-			word2vec[word] = np.asarray(vec, dtype = 'float32')
-	print(len(word2vec), "matches between unique words and word2vec dictionary")
+	# for line in text_embeddings:
+	# 	items = line.split(' ')
+	# 	word = items[0]
+	# 	if word in vocab:
+	# 		vec = items[1:]
+	# 		word2vec[word] = np.asarray(vec, dtype = 'float32')
+	# print(len(word2vec), "matches between unique words and word2vec dictionary")
 
 	pickle.dump(word2vec, open(output_pickle_path, 'wb'))
 	print("dictionaries outputted to", output_pickle_path)
@@ -120,6 +122,12 @@ def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, huge_word2
 	word2idx = {}
 	for i, word in enumerate(sorted(most_popular_words)):
 		word2idx[word] = i
-	
 	pickle.dump(word2idx, open(output_word2idx_path, 'wb'))
 	print("word2idx outputted to", output_word2idx_path)
+	
+	# generate middle popular words for insertions
+	middle_popular_words = get_middle_popular(word_to_count)
+	pickle.dump(middle_popular_words, open(middle_words_path, 'wb'))
+	print("middle words outputted to", middle_words_path)
+	print(middle_popular_words)
+	print(len(middle_popular_words))

@@ -1,7 +1,9 @@
+import config as config
 from pretext_task_generation import *
 from utils import *
 
-data_folder = Path("data/subj")
+dataset_name = "subj"
+data_folder = config.data_folders[dataset_name]
 input_train_txt_path = data_folder.joinpath("train.txt")
 input_test_txt_path = data_folder.joinpath("test.txt")
 output_folder = data_folder.joinpath("ssl")

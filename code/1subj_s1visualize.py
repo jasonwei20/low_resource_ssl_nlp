@@ -13,7 +13,7 @@ train_txt_path = data_folder.joinpath("train.txt")
 test_txt_path = data_folder.joinpath("test.txt")
 
 checkpoint_paths = [#Path("checkpoints/subj/2positions_32permutations/cnn_e00_tacc0.0312_vacc0.0323.pt"),
-                    Path("checkpoints/subj/supervised/cnn_e18_tacc0.8792_vacc0.8760.pt"),]
+                    Path("checkpoints/subj/mlm/cnn_e48_tacc0.2300_vacc0.2081.pt"),]
                     # Path("checkpoints/subj/2positions_32permutations/cnn_e11_tacc0.0840_vacc0.0683.pt"),]
 
 for checkpoint_path in checkpoint_paths:
