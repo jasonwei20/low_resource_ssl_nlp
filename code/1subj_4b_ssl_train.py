@@ -1,6 +1,6 @@
+import config as config
 from utils import *
 from utils_model import *
-import config as config
 
 dataset_name = "subj"
 data_folder = config.data_folders[dataset_name]

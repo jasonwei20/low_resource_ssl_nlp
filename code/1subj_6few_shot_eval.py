@@ -1,6 +1,6 @@
+import config as config
 from utils import *
 from utils_model import *
-import config as config
 
 dataset_name = "subj"
 data_folder = config.data_folders[dataset_name]
@@ -17,18 +17,19 @@ test_txt_path = data_folder.joinpath("test.txt")
 #                     Path("checkpoints/subj/2positions_8permutations/cnn_e13_tacc0.2516_vacc0.2095.pt/"),
 #                     Path("checkpoints/subj/2positions_8permutations/cnn_e65_tacc0.4709_vacc0.2397.pt/"),]
 
-
 # checkpoint_paths = [Path("checkpoints/subj/2positions_4permutations/cnn_e00_tacc0.2496_vacc0.2595.pt"),
 #                     Path("checkpoints/subj/2positions_4permutations/cnn_e11_tacc0.3957_vacc0.3268.pt"),
 #                     Path("checkpoints/subj/2positions_4permutations/cnn_e18_tacc0.4797_vacc0.3783.pt"),
 #                     Path("checkpoints/subj/2positions_4permutations/cnn_e76_tacc0.8619_vacc0.4067.pt"),]
 
 
-checkpoint_paths = [Path("checkpoints/subj/2positions_32permutations/cnn_e00_tacc0.0312_vacc0.0323.pt"),
-                    Path("checkpoints/subj/2positions_32permutations/cnn_e03_tacc0.0436_vacc0.0443.pt"),
-                    Path("checkpoints/subj/2positions_32permutations/cnn_e06_tacc0.0650_vacc0.0609.pt"),
-                    Path("checkpoints/subj/2positions_32permutations/cnn_e11_tacc0.0840_vacc0.0683.pt"),
-                    Path("checkpoints/subj/2positions_32permutations/cnn_e32_tacc0.1203_vacc0.0715.pt"),]
+# checkpoint_paths = [Path("checkpoints/subj/2positions_32permutations/cnn_e00_tacc0.0312_vacc0.0323.pt"),
+#                     Path("checkpoints/subj/2positions_32permutations/cnn_e03_tacc0.0436_vacc0.0443.pt"),
+#                     Path("checkpoints/subj/2positions_32permutations/cnn_e06_tacc0.0650_vacc0.0609.pt"),
+#                     Path("checkpoints/subj/2positions_32permutations/cnn_e11_tacc0.0840_vacc0.0683.pt"),
+#                     Path("checkpoints/subj/2positions_32permutations/cnn_e32_tacc0.1203_vacc0.0715.pt"),]
 
-for checkpoint_path in checkpoint_paths:
-    evaluate_ssl_model(train_txt_path, test_txt_path, num_classes, word2vec, checkpoint_path)
+# for checkpoint_path in checkpoint_paths:
+#     evaluate_ssl_model(train_txt_path, test_txt_path, num_classes, word2vec, checkpoint_path)
+
+evaluate_ssl_model(train_txt_path, test_txt_path, num_classes, word2vec, Path("checkpoints/subj/supervised/cnn_e18_tacc0.8792_vacc0.8760.pt"))

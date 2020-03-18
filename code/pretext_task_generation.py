@@ -1,5 +1,43 @@
 import random
 random.seed(42)
+from utils import *
+
+#############################################
+########### masked language model ###########
+#############################################
+
+def generate_mlm_lines(line, word2idx):
+    words = line.split(' ')
+    mlm_lines = []
+    for i, word in enumerate(words):
+        if word in word2idx:
+            list_copy = list(words)
+            list_copy[i] = ">"
+            mlm_data_line = " ".join(list_copy)
+            mlm_line = '\t'.join([str(word2idx[word]), mlm_data_line])
+            mlm_lines.append(mlm_line)
+    return mlm_lines
+
+def output_mlm_examples(input_txt_path, output_txt_path, word2idx_path):
+
+    lines = input_txt_path.open('r').readlines()
+    output_writer = output_txt_path.open('w')
+    word2idx = load_pickle(word2idx_path)
+
+    counter = 0
+    for line in lines:
+        line_data = line.replace("\n", "").split('\t')[1]
+        mlm_lines = generate_mlm_lines(line_data, word2idx)
+        counter += len(mlm_lines)
+        for mlm_line in mlm_lines:
+            output_writer.write(mlm_line + '\n')
+    
+    print(f"{counter} mlm lines outputted for {len(lines)}")
+
+
+#############################################
+############## word swap task ###############
+#############################################
 
 def retrieve_permutations(num_positions, num_permutations, max_len=15):
 

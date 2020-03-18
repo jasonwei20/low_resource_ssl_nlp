@@ -64,9 +64,17 @@ def get_all_txt_paths(master_folder):
 ################ data processing ##################
 ###################################################
 
-#get the pickle file for the word2vec so you don't have to load the entire huge file each time
-def gen_vocab_dicts(folder, output_pickle_path, huge_word2vec):
+def get_most_popular(word_to_count, n_most_popular):
+	tuples = word_to_count.items()
+	sorted_tuple_list = list(reversed(sorted(tuples, key=lambda x: x[1])))
+	most_popular_word_tuples = sorted_tuple_list[:n_most_popular]
+	most_popular_words = [x[0] for x in most_popular_word_tuples]
+	return most_popular_words
 
+#get the pickle file for the word2vec so you don't have to load the entire huge file each time
+def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, huge_word2vec):
+
+	word_to_count = {}
 	vocab = set()
 	text_embeddings = open(huge_word2vec, 'r').readlines()
 	word2vec = {}
@@ -86,6 +94,10 @@ def gen_vocab_dicts(folder, output_pickle_path, huge_word2vec):
 				words = data.split(' ')
 				for word in words:
 					vocab.add(word)
+					if word in word_to_count:
+						word_to_count[word] += 1
+					else:
+						word_to_count[word] = 1
 		except:
 			print(txt_path, "has an error")
 	
@@ -99,6 +111,15 @@ def gen_vocab_dicts(folder, output_pickle_path, huge_word2vec):
 			vec = items[1:]
 			word2vec[word] = np.asarray(vec, dtype = 'float32')
 	print(len(word2vec), "matches between unique words and word2vec dictionary")
-		
+
 	pickle.dump(word2vec, open(output_pickle_path, 'wb'))
 	print("dictionaries outputted to", output_pickle_path)
+	
+	# generate word2idx for MLM
+	most_popular_words = get_most_popular(word_to_count, n_most_popular=1000)
+	word2idx = {}
+	for i, word in enumerate(sorted(most_popular_words)):
+		word2idx[word] = i
+	
+	pickle.dump(word2idx, open(output_word2idx_path, 'wb'))
+	print("word2idx outputted to", output_word2idx_path)

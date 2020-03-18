@@ -1,5 +1,5 @@
-from utils import *
 from pretext_task_generation import *
+from utils import *
 
 data_folder = Path("data/subj")
 input_train_txt_path = data_folder.joinpath("train.txt")

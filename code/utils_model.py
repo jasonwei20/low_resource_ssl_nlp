@@ -2,8 +2,10 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from tensorflow.python.util import deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
+import matplotlib.pyplot as plt
 import numpy as np
 import random
+from sklearn.manifold import TSNE
 from sklearn.metrics import accuracy_score
 import statistics 
 import tensorflow.keras
@@ -158,7 +160,7 @@ def get_predicted_label(train_extracted_features, train_y, test_extracted_featur
 	majority_vote = most_common(votes)
 	return majority_vote
 
-def calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, n_voters, num_trials=50):
+def calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, n_voters, num_trials=10):
 	train_extracted_features = feature_extractor.predict(train_x)
 	test_extracted_features = feature_extractor.predict(test_x)
 	test_y_list = one_hot_numpy_to_list(test_y)
@@ -198,3 +200,65 @@ def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_
 
 	for k_per_class, n_voters in k_per_class_to_n_voters.items():
 		calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, n_voters)
+	return model
+
+###################################################
+###################################################
+################### visualization #################
+###################################################
+###################################################
+
+
+def get_plot_vectors(layer_output):
+
+	print("calculating tsne")
+	tsne = TSNE(n_components=2).fit_transform(layer_output)
+	print("finished calculating tsne")
+	return tsne
+
+def tsne_visualize(extracted_features, y_list):
+
+	tsne = get_plot_vectors(extracted_features)
+	plot_tsne(tsne, y_list, 'test.png')
+
+def plot_tsne(tsne, y_list, output_path):
+
+	colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#ff1493', '#FF4500']
+	classes = range(max(y_list)+1)
+
+	fig, ax = plt.subplots()
+
+	for i, _class in enumerate(classes):
+		legend_plotted = False
+		for j in range(tsne.shape[0]):
+			if y_list[j] == _class:
+				point = tsne[j]
+				x = point[0]
+				y = point[1]
+				if legend_plotted == False:
+					ax.scatter(x, y, color=colors[i], marker='o', s=6, label=str(_class))
+					legend_plotted = True
+				else:
+					ax.scatter(x, y, color=colors[i], marker='o', s=6)
+
+	plt.legend(prop={'size': 6})
+	plt.savefig(output_path, dpi=1000)
+	plt.clf()
+
+def visualize_predictions(train_file, test_file, num_classes, word2vec, checkpoint_path, word2vec_len=300, input_size=40):
+
+	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
+	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+
+	model = build_cnn(input_size, word2vec_len, num_classes)
+	if checkpoint_path:
+		model = load_model(str(checkpoint_path))
+		print("loaded model from", checkpoint_path)
+	feature_extractor = Model(inputs=model.input, outputs=model.get_layer(index=2).output)
+
+	train_extracted_features = feature_extractor.predict(train_x)
+	test_extracted_features = feature_extractor.predict(test_x)
+	train_y_list = one_hot_numpy_to_list(train_y)
+	test_y_list = one_hot_numpy_to_list(test_y)
+	tsne_visualize(test_extracted_features, test_y_list)
+	
