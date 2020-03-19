@@ -160,9 +160,7 @@ def get_predicted_label(train_extracted_features, train_y, test_extracted_featur
 	majority_vote = most_common(votes)
 	return majority_vote
 
-def calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, n_voters, num_trials=35):
-	train_extracted_features = feature_extractor.predict(train_x)
-	test_extracted_features = feature_extractor.predict(test_x)
+def calculate_few_shot_acc(feature_extractor, train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters, num_trials=35):
 	test_y_list = one_hot_numpy_to_list(test_y)
 
 	acc_score_list = []
@@ -190,6 +188,8 @@ def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_
 		model = load_model(str(checkpoint_path))
 		print("loading model from", checkpoint_path)
 	feature_extractor = Model(inputs=model.input, outputs=model.get_layer(index=2).output)
+	train_extracted_features = feature_extractor.predict(train_x)
+	test_extracted_features = feature_extractor.predict(test_x)
 
 	k_per_class_to_n_voters = {	1: 1,
 								2: 1,
@@ -199,7 +199,7 @@ def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_
 								20: 5}
 
 	for k_per_class, n_voters in k_per_class_to_n_voters.items():
-		calculate_few_shot_acc(feature_extractor, train_x, train_y, test_x, test_y, num_classes, k_per_class, n_voters)
+		calculate_few_shot_acc(feature_extractor, train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
 	return model
 
 ###################################################

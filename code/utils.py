@@ -106,13 +106,13 @@ def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, middle_wor
 	print(len(vocab), "unique words found")
 
 	# load the word embeddings, and only add the word to the dictionary if we need it
-	# for line in text_embeddings:
-	# 	items = line.split(' ')
-	# 	word = items[0]
-	# 	if word in vocab:
-	# 		vec = items[1:]
-	# 		word2vec[word] = np.asarray(vec, dtype = 'float32')
-	# print(len(word2vec), "matches between unique words and word2vec dictionary")
+	for line in text_embeddings:
+		items = line.split(' ')
+		word = items[0]
+		if word in vocab:
+			vec = items[1:]
+			word2vec[word] = np.asarray(vec, dtype = 'float32')
+	print(len(word2vec), "matches between unique words and word2vec dictionary")
 
 	pickle.dump(word2vec, open(output_pickle_path, 'wb'))
 	print("dictionaries outputted to", output_pickle_path)
@@ -129,5 +129,4 @@ def gen_vocab_dicts(folder, output_pickle_path, output_word2idx_path, middle_wor
 	middle_popular_words = get_middle_popular(word_to_count)
 	pickle.dump(middle_popular_words, open(middle_words_path, 'wb'))
 	print("middle words outputted to", middle_words_path)
-	print(middle_popular_words)
 	print(len(middle_popular_words))
