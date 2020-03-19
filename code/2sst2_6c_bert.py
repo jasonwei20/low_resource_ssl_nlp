@@ -33,7 +33,7 @@ import config as config
 from utils import *
 from utils_model import *
 
-dataset_name = "subj"
+dataset_name = "sst2"
 data_folder = config.data_folders[dataset_name]
 num_classes = config.num_classes_dict[dataset_name]
 ssl_folder = data_folder.joinpath("ssl")
