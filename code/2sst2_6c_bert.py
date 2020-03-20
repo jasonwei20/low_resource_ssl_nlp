@@ -1,6 +1,8 @@
 import torch
 from transformers import *
 import numpy as np
+from utils import *
+from utils_model import *
 
 model_class = BertModel
 tokenizer_class = BertTokenizer
@@ -11,7 +13,7 @@ tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
 def get_bert_embedding_single(model, tokenizer, input_text):
     input_ids = torch.tensor([tokenizer.encode(input_text)])
     last_hidden_states = model(input_ids)[0].cpu().detach().numpy()
-    last_hidden_states = np.mean(last_hidden_states, axis=1)
+    last_hidden_states = last_hidden_states[:, 0, :]
     last_hidden_states = last_hidden_states.flatten()
     return last_hidden_states
 
@@ -51,14 +53,16 @@ test_extracted_features = get_bert_embedding(model, tokenizer, test_lines)
 
 train_x, train_y = get_x_y(train_txt_path, num_classes, word2vec_len=300, input_size=40, word2vec=word2vec)
 test_x, test_y = get_x_y(test_txt_path, num_classes, word2vec_len=300, input_size=40, word2vec=word2vec)
+test_y_list = one_hot_numpy_to_list(test_y)
 
-k_per_class_to_n_voters = {	1: 1,
-                            2: 1,
-                            3: 1, 
-                            5: 3,
-                            10: 3,
-                            20: 5}
+# k_per_class_to_n_voters = {	1: 1,
+#                             2: 1,
+#                             3: 1, 
+#                             5: 3,
+#                             10: 3,
+#                             20: 5}
 
-for k_per_class, n_voters in k_per_class_to_n_voters.items():
-    calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
-	
+# for k_per_class, n_voters in k_per_class_to_n_voters.items():
+#     calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
+
+tsne_visualize(test_extracted_features, test_y_list)

@@ -11,7 +11,7 @@ tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
 def get_bert_embedding_single(model, tokenizer, input_text):
     input_ids = torch.tensor([tokenizer.encode(input_text)])
     last_hidden_states = model(input_ids)[0].cpu().detach().numpy()
-    last_hidden_states = np.mean(last_hidden_states, axis=1)
+    last_hidden_states = last_hidden_states[:, 0, :]
     last_hidden_states = last_hidden_states.flatten()
     return last_hidden_states
 

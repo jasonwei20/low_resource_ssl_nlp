@@ -12,7 +12,7 @@ def generate_mlm_lines(line, word2idx):
     for i, word in enumerate(words):
         if word in word2idx:
             list_copy = list(words)
-            list_copy[i] = ">"
+            del list_copy[i] #list_copy[i] = ">"
             mlm_data_line = " ".join(list_copy)
             mlm_line = '\t'.join([str(word2idx[word]), mlm_data_line])
             mlm_lines.append(mlm_line)

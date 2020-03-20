@@ -150,7 +150,7 @@ def get_predicted_label(train_extracted_features, train_y, test_extracted_featur
 	tup_list = []
 	for j in range(train_extracted_features.shape[0]):
 		train_extracted_feature_j = train_extracted_features[j]
-		train_extracted_label_j = train_y[j]
+		train_extracted_label_j = train_y[j]   
 		dist = np.linalg.norm(train_extracted_feature_j - test_extracted_feature_i)
 		tup = (j, dist, train_extracted_label_j)
 		tup_list.append(tup)
@@ -160,7 +160,7 @@ def get_predicted_label(train_extracted_features, train_y, test_extracted_featur
 	majority_vote = most_common(votes)
 	return majority_vote
 
-def calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters, num_trials=100):
+def calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters, num_trials=200):
 	test_y_list = one_hot_numpy_to_list(test_y)
 
 	acc_score_list = []
