@@ -7,6 +7,8 @@ import numpy as np
 import random
 from sklearn.manifold import TSNE
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import silhouette_score
+from sklearn.svm import SVC
 import statistics 
 import tensorflow.keras
 import tensorflow.keras.layers as layers
@@ -31,11 +33,12 @@ def one_hot_numpy_to_list(one_hot_numpy):
 	return l
 
 #getting the x and y inputs in numpy array form from the text file
-def get_x_y(train_txt, num_classes, word2vec_len, input_size, word2vec):
+def get_x_y(train_txt, num_classes, word2vec_len, input_size, word2vec, max_samples):
 
 	#read in lines
 	train_lines = open(train_txt, 'r').readlines()
-	# shuffle(train_lines)
+	random.shuffle(train_lines)
+	train_lines = train_lines[:max_samples]
 	num_lines = len(train_lines)
 
 	#initialize x and y matrix
@@ -88,12 +91,16 @@ def build_cnn(sentence_length, word2vec_len, num_classes):
 ###################################################
 ###################################################
 
-def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, word2vec_len=300, input_size=40):
+def train_ssl(train_file, test_file, num_classes, word2vec, checkpoints_folder, word2vec_len=300, input_size=40, checkpoint_path=None):
 
 	model = build_cnn(input_size, word2vec_len, num_classes)
 
-	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
-	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+	if checkpoint_path:
+		model = load_model(str(checkpoint_path))
+		print("loading model from", checkpoint_path)
+
+	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec, max_samples=300000)
+	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec, max_samples=20000)
 
 	training_history = []
 	max_val_acc = 0.0
@@ -178,10 +185,33 @@ def calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_fea
 	output_line = f"{k_per_class},{acc:.4f},{std}"
 	print(output_line)
 
+def calculate_svm_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, num_trials=10):
+	test_y_list = one_hot_numpy_to_list(test_y)
+
+	acc_score_list = []
+	for _ in range(num_trials):
+		train_extracted_features_k, train_y_k = get_training_subset(train_extracted_features, train_y, num_classes, k_per_class)
+		clf = SVC(gamma='auto')
+		clf.fit(train_extracted_features_k, train_y_k)
+		test_y_predict = list(clf.predict(test_extracted_features))
+		acc = accuracy_score(test_y_list, test_y_predict)
+		acc_score_list.append(acc)
+	
+	acc = sum(acc_score_list) / len(acc_score_list)
+	std = statistics.stdev(acc_score_list)
+	output_line = f"{k_per_class},{acc:.4f},{std}"
+	print(output_line)
+
+def calculate_silhouette_score(test_extracted_features, test_y):
+	test_y_np = np.array(one_hot_numpy_to_list(test_y))
+	silhouette = silhouette_score(test_extracted_features, test_y_np)
+	print(f"silhouette: {silhouette}")
+
+
 def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_path, word2vec_len=300, input_size=40):
 
-	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
-	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec, max_samples=300000)
+	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec, max_samples=20000)
 
 	model = build_cnn(input_size, word2vec_len, num_classes)
 	if checkpoint_path:
@@ -191,6 +221,10 @@ def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_
 	train_extracted_features = feature_extractor.predict(train_x)
 	test_extracted_features = feature_extractor.predict(test_x)
 
+	#silhouette score
+	calculate_silhouette_score(test_extracted_features, test_y)
+
+	#few shot acc evaluation
 	k_per_class_to_n_voters = {	1: 1,
 								2: 1,
 								3: 1, 
@@ -200,7 +234,15 @@ def evaluate_ssl_model(train_file, test_file, num_classes, word2vec, checkpoint_
 
 	for k_per_class, n_voters in k_per_class_to_n_voters.items():
 		calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
-	return model
+
+	#svm evaluation
+	print("SVM evaluation")
+	k_per_class_svm = [100, 200, 500, 1000]
+
+	for k_per_class in k_per_class_svm:
+		calculate_svm_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class)
+
+	
 
 ###################################################
 ###################################################
@@ -247,8 +289,8 @@ def plot_tsne(tsne, y_list, output_path):
 
 def visualize_predictions(train_file, test_file, num_classes, word2vec, checkpoint_path, word2vec_len=300, input_size=40):
 
-	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec)
-	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec)
+	train_x, train_y = get_x_y(train_file, num_classes, word2vec_len, input_size, word2vec, max_samples=300000)
+	test_x, test_y = get_x_y(test_file, num_classes, word2vec_len, input_size, word2vec, max_samples=20000)
 
 	model = build_cnn(input_size, word2vec_len, num_classes)
 	if checkpoint_path:

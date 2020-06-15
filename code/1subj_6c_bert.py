@@ -52,13 +52,17 @@ test_extracted_features = get_bert_embedding(model, tokenizer, test_lines)
 train_x, train_y = get_x_y(train_txt_path, num_classes, word2vec_len=300, input_size=40, word2vec=word2vec)
 test_x, test_y = get_x_y(test_txt_path, num_classes, word2vec_len=300, input_size=40, word2vec=word2vec)
 
-k_per_class_to_n_voters = {	1: 1,
-                            2: 1,
-                            3: 1, 
-                            5: 3,
-                            10: 3,
-                            20: 5}
+# k_per_class_to_n_voters = {	1: 1,
+#                             2: 1,
+#                             3: 1, 
+#                             5: 3,
+#                             10: 3,
+#                             20: 5}
 
-for k_per_class, n_voters in k_per_class_to_n_voters.items():
-    calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
-	
+# for k_per_class, n_voters in k_per_class_to_n_voters.items():
+#     calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
+
+k_per_class_svm = [100, 200, 500, 1000]
+
+for k_per_class in k_per_class_svm:
+    calculate_svm_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class)

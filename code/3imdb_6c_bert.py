@@ -35,7 +35,7 @@ import config as config
 from utils import *
 from utils_model import *
 
-dataset_name = "sst2"
+dataset_name = "imdb"
 data_folder = config.data_folders[dataset_name]
 num_classes = config.num_classes_dict[dataset_name]
 ssl_folder = data_folder.joinpath("ssl")
@@ -55,15 +55,15 @@ train_x, train_y = get_x_y(train_txt_path, num_classes, word2vec_len=300, input_
 test_x, test_y = get_x_y(test_txt_path, num_classes, word2vec_len=300, input_size=40, word2vec=word2vec)
 test_y_list = one_hot_numpy_to_list(test_y)
 
-# k_per_class_to_n_voters = {	1: 1,
-#                             2: 1,
-#                             3: 1, 
-#                             5: 3,
-#                             10: 3,
-#                             20: 5}
+k_per_class_to_n_voters = {	1: 1,
+                            2: 1,
+                            3: 1, 
+                            5: 3,
+                            10: 3,
+                            20: 5}
 
-# for k_per_class, n_voters in k_per_class_to_n_voters.items():
-#     calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
+for k_per_class, n_voters in k_per_class_to_n_voters.items():
+    calculate_few_shot_acc(train_extracted_features, train_y, test_extracted_features, test_y, num_classes, k_per_class, n_voters)
 
 k_per_class_svm = [100, 200, 500, 1000]
 

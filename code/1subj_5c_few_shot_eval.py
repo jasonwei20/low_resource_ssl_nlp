@@ -31,10 +31,12 @@ test_txt_path = data_folder.joinpath("test.txt")
 #                     Path("checkpoints/subj/2positions_8permutations/cnn_e46_tacc0.4116_vacc0.2733.pt"),
 #                     ]
 
-checkpoint_paths = [Path("checkpoints/subj/2insertions_8permutations/cnn_e00_tacc0.1262_vacc0.1281.pt"),
-                    Path("checkpoints/subj/2insertions_8permutations/cnn_e03_tacc0.1639_vacc0.1509.pt"),
-                    Path("checkpoints/subj/2insertions_8permutations/cnn_e08_tacc0.2262_vacc0.1820.pt"),
-                    Path("checkpoints/subj/2insertions_8permutations/cnn_e15_tacc0.3049_vacc0.2100.pt"),
+checkpoint_paths = [# Path("checkpoints/subj/2insertions_8permutations/cnn_e00_tacc0.1262_vacc0.1281.pt"),
+                    # Path("checkpoints/subj/2insertions_8permutations/cnn_e03_tacc0.1639_vacc0.1509.pt"),
+                    # Path("checkpoints/subj/2insertions_8permutations/cnn_e08_tacc0.2262_vacc0.1820.pt"),
+                    # Path("checkpoints/subj/2insertions_8permutations/cnn_e15_tacc0.3049_vacc0.2100.pt"),
+                    Path("checkpoints/subj/supervised/cnn_e18_tacc0.8792_vacc0.8760.pt"),
+                    Path("checkpoints/subj/mlm_first_run/cnn_e52_tacc0.1330_vacc0.1028.pt"),
                     Path("checkpoints/subj/2insertions_8permutations/cnn_e70_tacc0.5573_vacc0.2286.pt"),
                     ]
 
